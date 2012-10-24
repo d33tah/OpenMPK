@@ -14,7 +14,7 @@ public class Graph {
 		this.stops = stops;
 	}
 	
-	private void addStop(Stop stop) {
+	public void addStop(Stop stop) {
 		stops.put(stop, null);
 	}
 }
