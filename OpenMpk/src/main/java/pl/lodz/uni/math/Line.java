@@ -2,6 +2,7 @@ package pl.lodz.uni.math;
 
 public class Line {
 	private String name;
+	//test Piotrka
 
 	public String getName() {
 		return name;
@@ -9,5 +10,5 @@ public class Line {
 
 	public void setName(String name) {
 		this.name = name;
-	}	
+	}
 }
