@@ -1,13 +1,32 @@
 #!/usr/bin/python3
 # -*- coding: windows-1250 -*-
 
+"""
+scraper.py
+
+Ten kod z za³o¿enia ma pobieraæ dane z pobranych z mpk.lodz.pl paczek 
+z rozk³adami, a tak¿e samodzielnie pobieraæ stamt¹d surowe dane i przetwarzaæ
+je. Po przetworzeniu na wyjœciu ma pojawiaæ siê ³atwiejsza do przetworzenia
+struktura danych.
+
+Kod na dzieñ dzisiejszy wygl¹da przeokropnie - upar³em siê na Pythona 3, a ¿e
+nie by³em w stanie znaleŸæ dla niego ¿adnej biblioteki dla scrapingu, u¿y³em
+urllib+w³asnych hacków. Drugim powodem jest sposób, w jaki zbudowana jest
+strona MPK - jest kilka ciekawych kwiatków, opisane w komentarzach poni¿ej.
+Trzeci powód jest taki, ¿e na ka¿dym z kroków nie mia³em pojêcia, czego bêdê
+potrzebowa³ za chwilê i tak powsta³ hack na hacku. Kiedyœ pewnie bêdzie trzeba
+to przepisaæ.
+"""
+
+#na wypadek uruchomienia pod Pythonem 2.x - funkcja print() zamiast operatora
 from __future__ import print_function
 
 import sys #exit()
 import os #do sprawdzania czy katalog istnieje
 import shutil #wygodne usuwanie katalogu
 import zipfile #pliki .zip
-from lxml import html
+from lxml import html #parsowanie HTML
+import re #wyra¿enia regularne
 
 if not sys.version.startswith('3'):
 	print("""
@@ -15,14 +34,174 @@ if not sys.version.startswith('3'):
 	Pythona w wersji 3.x W teorii wszystko powinno dzia³aæ, ale na wszelki
 	wypadek przerywam dzia³anie programu.
 	""")
-	#sys.exit(1) #zakomentuj t¹ linijkê, jeœli czujesz siê odwa¿ny :P
+	sys.exit(1) #zakomentuj t¹ linijkê, jeœli czujesz siê odwa¿ny :P
+	print("Program kontynuuje pracê...")
 
+#za³aduj biblioteki z Pythona 2/3 ze spójnymi nazwami
 if sys.version.startswith('2'):
 	from urllib2 import urlopen
+	from urllib2 import quote
 elif sys.version.startswith('3'):
+	from urllib.parse import quote
 	from urllib.request import urlopen
 
+
+def popraw_file_url(url):
+	"""
+	HACK.
+
+	Powodem jest sposób, w jaki zorganizowane s¹ strony w pliczkach
+	zip z mpk.lodz.pl. Rozk³ady s¹ tam ³adowane do linie.htm?p1=w1&p2=w2.
+	Oczywiœcie taki plik nie istnieje, wiêc musi zostaæ za³adowany 
+	linie.htm, a reszta tekstu obciêta. Zwracany jest poprawiony URL.
+	"""
+	if url.startswith('file://'):
+		#weŸ A/B i zapisz A w podzielony[0] i B w podzielony[1]
+		podzielony = re.findall('^(.*)/(.*)$',url)[0]
+		#poszukaj znaku zapytania
+		indeks = podzielony[1].find('?')
+		#jeœli znalaz³eœ
+		if indeks!=-1:
+			#zwróæ A/B do tego znaku
+			return podzielony[0]+'/'+podzielony[1][:indeks]
+		else: #w przeciwnych wypadkach zwróæ URL nienaruszony
+			return url
+	else:
+		return url
+
+def wybierz_ramke(tree,nazwa_ramki,base_url):
+	"""
+	Jako, ¿e mamy XXI wiek, strona jest oczywiœcie napisana na ramkach
+	i tabelkach. Skrypt musi byæ tego œwiadomy i pozwoliæ na wybór 
+	odpowiedniej ramki.
+
+	Ta funkcja pobiera obiekt lxml.html, nazwê wyciêtej ramki oraz
+	bazowy adres URL, który ma byæ doklejony do wybranego z src ramki.
+	Zwracany jest nowy (albo i nie, jeœli ramek nie ma) obiekt lxml.html,
+	który ma ju¿ za³adowan¹ zawartoœæ ramki.
+	"""
+	ramka = tree.xpath('//frame [@name="%s"]' % nazwa_ramki)
+	if(len(ramka)==1): #znaleziono ramkê
+		href = ramka[0].attrib['src']
+		"""
+		HACK: je¿eli w linku jest ?r=, to dalej bêdzie tekst 
+		wyœwietlany ¿ywcem na stronie. Trzeba go przepuœciæ przez
+		quote, ale tylko czêœæ po ?r=.
+		"""
+		if href.find('?r=')!=-1:
+			podzielone = href.split('?r=')
+			href = podzielone[0]+'?r='+quote(podzielone[1])
+		nowy_url = base_url + href
+		nowy_kod_html = urlopen(nowy_url).read()
+		nowy_tree = html.fromstring(
+				nowy_kod_html.decode('windows-1250'))
+		return nowy_tree
+	else:
+		return tree
+
+def przetworz_rozklad(url,base_url,stary_base_url):
+	"""
+	Pobieramy rozk³ad i przetwarzamy go. Do odczytania ramek
+	potrzebne by³o czary_mary z base_url i stary_base_url.
+
+	Wynika to ze sposobu, w jaki pliki z rozk³adami s¹ zapisane
+	w pliku .zip na stronie. Poza znakiem zapytaniem w treœci,
+	trzeba by³o jeszcze jakoœ rozwi¹zaæ "../" w adresach.
+	"""
+	docelowy_url = popraw_file_url(base_url+url)
+	kod_html_rozklad = urlopen(docelowy_url).read()
+	tree = html.fromstring(kod_html_rozklad.decode('windows-1250'))
+	if url.find('ramka.html?l=')!=-1: #wersja z ZIPa
+		par = re.findall('\?l=(.*?)&p=(.*?)&k',url)[0]
+		nowy_url = "%s/%s/%s.htm" % (stary_base_url,par[0],par[1])
+		nowy_html = urlopen(nowy_url).read()
+		tree = html.fromstring(nowy_html.decode('windows-1250'))
+	else: #wersja ze strony
+		tree = wybierz_ramke(tree,'T',base_url)
+	print(tree.text_content())
+	input() #USUN¥Æ PO TESTACH
+
+class Linia:
+	def __init__(self,nazwa,url,base_url):
+		"""
+		Konstruktor klasy Linia. Bierze trzy parametry i zapisuje
+		jako swoje atrybuty.
+		"""
+		self.nazwa = nazwa
+		self.url = url
+		self.base_url = base_url
+		self.przystanki = [] 
+
+	def __str__(self):
+		"""
+		Rzutowanie obiektu klasy Linia na stringa. Zrobione zgodnie
+		z Pythonowymi zwyczajami.
+		"""
+		return '<Linia id="%s", nazwa="%s", url="%s" />' % (
+				id(self), self.nazwa, self.url)
+
+	def __eq__(lewy,prawy):
+		"""
+		Porównywanie dwóch obiektów klasy Linia - porównujemy tylko 
+		nazwy. Domyœlnie obiekty s¹ równe tylko gdy jest to ten sam 
+		obiekt w dwóch referencjach.
+		"""
+		return isinstance(prawy,Linia) and (lewy.nazwa)==(prawy.nazwa)
+
+	def przetworz_kierunek(self,kierunek):
+		"""
+		Przetwarzamy pojedynczy kierunek jazdy z listy przystanków.
+		"""
+		for wpis in kierunek.xpath('.//tr')[1:]: #[1:] = bez nag³ówka
+			ulica_glowna = wpis[0].text_content().strip()
+			link = wpis[2].xpath('a')
+			if link: #przystanek mo¿e nie mieæ linka, zwykle pêtla.
+				nazwa_przystanku = link[0].text_content()
+				url_rozkladu = link[0].attrib['href']
+				base_url_rozkladu = re.findall('^(.*)/(.*)$',
+						self.url)[0][0]+'/'
+				#przetwarzamy rozk³ad jazdy, w celach testowych
+				przetworz_rozklad(url_rozkladu,
+						base_url_rozkladu,
+						self.base_url)
+				break #USUN¥Æ PO TESTACH
+			else:
+				nazwa_przystanku = wpis[2].text_content()
+			"""
+			Na razie pojedynczy przystanek reprezentowany jest
+			wy³¹cznie przez jego nazwê, która na dzieñ dzisiejszy
+			jest kiepsko formatowana. Jak ju¿ zerknê, co powinno
+			byæ w klasie, utworzê takow¹.
+			"""
+			self.przystanki += ["%s - %s" % (
+				ulica_glowna,nazwa_przystanku)]
+
+	def pobierz_przystanki(self):
+		"""
+		Jeœli ju¿ mamy przystanki, zwróæ je. W przeciwnym razie
+		wejdŸ na linka z obiektu, przeskocz ramki i dla ka¿dego
+		z kierunków, przetwórz go.
+		"""
+		if not self.przystanki:
+
+			kod_html_przystanki = urlopen(self.url).read()
+			tree = html.fromstring(kod_html_przystanki. \
+					decode('windows-1250'))
+
+			tree = wybierz_ramke(tree,'rozklad',self.base_url)
+			tree = wybierz_ramke(tree,'D',self.base_url)
+		
+			for kierunek in tree.xpath('//td [@class="przyst"]'):
+				self.przetworz_kierunek(kierunek)
+				break #USUN¥Æ PO TESTACH
+
+		return self.przystanki
+
 def pobierz_plik(url,nazwa_pliku,rozmiar_bufora=2048):
+	"""
+	Pobierz plik, bior¹c pod uwagê, ¿e mo¿e siê ca³y w pamiêci nie 
+	zmieœciæ.
+	"""
 	h = urlopen(url)
 	f = open(nazwa_pliku,'wb')
 	while True:
@@ -34,13 +213,16 @@ def pobierz_plik(url,nazwa_pliku,rozmiar_bufora=2048):
 
 def rozpakuj_plik(nazwa_pliku,katalog='.'):
 	"""
-	Aktualnie dzia³a tylko pod Linuksem. Nie wiem jak wygl¹da sprawa
-	z 
+	Myœla³em, ¿e bêdzie tu wiêcej kodu. Z drugiej strony, nie testowa³em
+	tego pod Windows.
 	"""
 	plik = zipfile.ZipFile(nazwa_pliku)
 	plik.extractall(path=katalog)
 
 def pobierz_paczki():
+	"""
+	Pobiera paczki z rozk³adami i rozpakowuje je.
+	"""
 	nazwy_plikow = ['autobusy.zip','tramwaje.zip',
 			'nocne.zip','przesiadki.zip']
 	url = 'http://mpk.lodz.pl/rozklady/skompresowane_rozklady/'
@@ -66,20 +248,60 @@ def pobierz_paczki():
 		rozpakuj_plik('pliki/'+nazwa_pliku,'rozpakowane')
 
 def listuj_linie(url):
+	"""
+	Funkcja wchodzi na podanego URL'a (w przypadku strony MPK, musi
+	nast¹piæ przekierowanie, bo mamy index.jsp, a nie .html) i pobiera
+	listê linii.
+
+	TODO: rozró¿niaæ autobusy dzienne/nocne i tramwaje? Na tej podstronie
+	jest taka mo¿liwoœæ.
+	"""
 	kod_html = urlopen(url+'/index.html').read()
 	tree = html.fromstring(kod_html.decode('windows-1250'))
+	przekierowanie = tree.xpath('//meta [@http-equiv="refresh"]')
+	if przekierowanie:
+		"""
+		Wybierz pierwszy element z tej tablicy i weŸ tekst na prawo od 
+		URL w jego 'content'.
+		"""
+		nowy_url = przekierowanie[0].attrib['content'].split(
+				'URL=')[-1]
+		kod_html = urlopen(nowy_url).read()
+		tree = html.fromstring(kod_html.decode('windows-1250'))
 
-	ramka = tree.xpath('//frame [@name="rozklad"]')
-	print("len(ramka)=%s" % len(ramka))
-	assert(len(ramka)==1)
-	ramka = ramka[0]
-
-	kod_html = urlopen(url+ramka.attrib['src'])
-
-	pass
+	linie_tree = wybierz_ramke(tree,'rozklad',url)
+	linie_td = linie_tree.xpath('//div [contains(@id,bx1)]//td \
+			[@class="nagl" and not(contains(.,"Aktualny"))]')
+	ret = []
+	for linia in linie_td:
+		link = linia.xpath('a')[0]
+		nazwa_linii = link.text_content().lstrip("Linia: ")
+		url_linii = url+link.attrib['href']
+		ret += [Linia(nazwa_linii,url_linii,url)]
+	return ret
 
 if __name__=='__main__':
-	listuj_linie('file://%s/' % os.path.realpath('rozpakowane'))
-	listuj_linie('http://www.mpk.lodz.pl/rozklady/')
+	"""
+	Kod testuj¹cy.
+	"""
 	#pobierz_paczki()
+	z_paczki = listuj_linie('file://%s/' % os.path.realpath('rozpakowane'))
+	ze_strony = listuj_linie('http://www.mpk.lodz.pl/rozklady/')
+	assert(z_paczki==ze_strony)
+	przetworzonych = 0
+	z_bledami = 0
+	for i in range(len(z_paczki)):
+		przetworzonych += 1
+		print("Porownuje %s i %s..." % (
+			z_paczki[i].nazwa, ze_strony[i].nazwa))
+		przystanki_z_paczki = z_paczki[i].pobierz_przystanki()
+		przystanki_ze_strony = ze_strony[i].pobierz_przystanki()
+		if(przystanki_z_paczki!=przystanki_ze_strony):
+			print("Ró¿nica!")
+			z_bledami += 1
+			#print(przystanki_z_paczki,przystanki_ze_strony)
+		#assert(przystanki_z_paczki==przystanki_ze_strony)
+		sys.exit(0) #USUN¥Æ PO TESTACH
+	print("Przetworzonych: %d, z b³êdami: %d" % (
+		przetworzonych, z_bledami))
 
