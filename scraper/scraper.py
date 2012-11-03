@@ -179,11 +179,30 @@ class Linia:
 		return isinstance(prawy,Linia) and (lewy.nazwa)==(prawy.nazwa)
 
 	def obsluz_przesiadki(self,link):
-		print(link)
-		print(link.attrib)
+		"""
+		Wstêpny kod obs³ugi przesiadek. Klika w link "przesiadki" dla
+		danego przystanku i listuje, jakie linie s¹ na danym 
+		przystanku.
+		"""
 		url = link.attrib['href']
-		docelowy_url = popraw_file_url(self.base_url+url)
-		print(docelowy_url)
+		base_url_rozkladu = re.findall('^(.*)/(.*)$',
+						self.url)[0][0]+'/'
+		docelowy_url = base_url_rozkladu+url 
+		kod_html_przesiadki = urlopen(docelowy_url).read()
+		tree = html.fromstring(kod_html_przesiadki. \
+					decode('windows-1250'))
+		for p in tree.xpath('//p'):
+			if p.text_content().endswith('na mapie'):
+				next #mapa nas na razie nie interesuje.
+			nast_el = p.getnext()
+			if(nast_el.tag=='ul'):
+				for el in nast_el.xpath('li'):
+					#uwaga na link! znowu bêdzie problem
+					#z ramka.html w ZIPie
+					link = el.xpath('a')[0]
+					nazwa_linii = link.text_content().strip()
+					print('"%s"' % nazwa_linii)
+				break #chyba, ¿e nas interesuj¹ linie w pobli¿u?
 
 	def przetworz_kierunek(self,kierunek):
 		"""
@@ -334,6 +353,7 @@ if __name__=='__main__':
 		print("Porownuje %s i %s..." % (
 			z_paczki[i].nazwa, ze_strony[i].nazwa))
 		przystanki_z_paczki = z_paczki[i].pobierz_przystanki()
+		print("Teraz bêdzie ze strony.")
 		przystanki_ze_strony = ze_strony[i].pobierz_przystanki()
 		if(przystanki_z_paczki!=przystanki_ze_strony):
 			print("Ró¿nica!")
