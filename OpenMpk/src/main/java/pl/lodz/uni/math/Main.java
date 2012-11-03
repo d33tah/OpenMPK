@@ -8,7 +8,7 @@ public class Main {
 		Graph graph = new Graph();
 
 		Stop s1 = new Stop();
-		s1.setName("LegionÃ³w - WÅ‚Ã³kniarzy");
+		s1.setName("Legionów - W³ókniarzy");
 
 		Stop s2 = new Stop(); 
 		s2.setName("Zielona - 1 Maja");
@@ -37,7 +37,7 @@ public class Main {
 		graph.addStop(s1,l1);
 		graph.addStop(s2,l2);
 
-		System.out.print("Program uruchomiÅ‚ siÄ™ poprawnie.");
+		System.out.print("Program uruchomi³ siê poprawnie.");
 
 	}
 }
