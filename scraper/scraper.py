@@ -99,6 +99,25 @@ def wybierz_ramke(tree,nazwa_ramki,base_url):
 	else:
 		return tree
 
+def przetworz_kolumne_rozkladu(godziny,minuty):
+	"""
+	Przetwarza pojedyncz¹ kolumnê rozk³adu - t¹ 'W dni robocze
+	oprócz sobót', 'W soboty', 'W niedziela i œwiêta', 'Dnia x'
+	itp.
+	"""
+	tr_godziny = godziny.xpath('.//tr')
+	tr_minuty = minuty.xpath('.//tr')
+	assert(len(tr_godziny)==len(tr_minuty))
+	for i in range(len(tr_godziny)):
+		godzina = tr_godziny[i].text_content()
+		godzina = int(godzina)
+		wiersz_minut = tr_minuty[i]
+		for td_minuta in tr_minuty[i].xpath('.//td'):
+			#TODO: poprawne przetwarzanie 'x' na koñcu.
+			minuta = td_minuta.text_content().rstrip('x')
+			minuta = int(minuta)
+			czas = '%d:%02d' % (godzina,minuta)
+
 def przetworz_rozklad(url,base_url,stary_base_url):
 	"""
 	Pobieramy rozk³ad i przetwarzamy go. Do odczytania ramek
@@ -118,8 +137,19 @@ def przetworz_rozklad(url,base_url,stary_base_url):
 		tree = html.fromstring(nowy_html.decode('windows-1250'))
 	else: #wersja ze strony
 		tree = wybierz_ramke(tree,'T',base_url)
-	print(tree.text_content())
-	input() #USUN¥Æ PO TESTACH
+
+	glowne_tabele = tree.xpath('//td [@valign="TOP"]')
+	assert(len(glowne_tabele)==2)
+
+	tabela_z_czasami = glowne_tabele[0]
+	tabela_z_rozkladem = glowne_tabele[1].xpath('./table')[0]
+	assert(len(tabela_z_rozkladem.xpath('./tr'))==4)
+
+	rozklad = tabela_z_rozkladem.xpath('./tr')[2]
+	kolumny_rozkladu = rozklad.xpath('./td')
+	for i in range(int(len(kolumny_rozkladu)/2)):
+		przetworz_kolumne_rozkladu(
+				kolumny_rozkladu[i],kolumny_rozkladu[i+1])
 
 class Linia:
 	def __init__(self,nazwa,url,base_url):
@@ -148,6 +178,13 @@ class Linia:
 		"""
 		return isinstance(prawy,Linia) and (lewy.nazwa)==(prawy.nazwa)
 
+	def obsluz_przesiadki(self,link):
+		print(link)
+		print(link.attrib)
+		url = link.attrib['href']
+		docelowy_url = popraw_file_url(self.base_url+url)
+		print(docelowy_url)
+
 	def przetworz_kierunek(self,kierunek):
 		"""
 		Przetwarzamy pojedynczy kierunek jazdy z listy przystanków.
@@ -161,12 +198,14 @@ class Linia:
 				base_url_rozkladu = re.findall('^(.*)/(.*)$',
 						self.url)[0][0]+'/'
 				#przetwarzamy rozk³ad jazdy, w celach testowych
-				przetworz_rozklad(url_rozkladu,
-						base_url_rozkladu,
-						self.base_url)
-				break #USUN¥Æ PO TESTACH
+			#	przetworz_rozklad(url_rozkladu,
+			#			base_url_rozkladu,
+			#			self.base_url)
 			else:
 				nazwa_przystanku = wpis[2].text_content()
+			if wpis[3].xpath('.//a'):
+				self.obsluz_przesiadki(
+						wpis[3].xpath('.//a')[0])
 			"""
 			Na razie pojedynczy przystanek reprezentowany jest
 			wy³¹cznie przez jego nazwê, która na dzieñ dzisiejszy
