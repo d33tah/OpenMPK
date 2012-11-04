@@ -19,9 +19,7 @@ import zipfile #pliki .zip
 #za³aduj biblioteki z Pythona 2/3 ze spójnymi nazwami
 if sys.version.startswith('2'):
       from urllib2 import urlopen
-      from urllib2 import quote
 elif sys.version.startswith('3'):
-      from urllib.parse import quote
       from urllib.request import urlopen
 
 def pobierz_plik(url,nazwa_pliku,rozmiar_bufora=2048):

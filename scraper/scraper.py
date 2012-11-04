@@ -39,25 +39,29 @@ from downloader import pobierz_paczki
 if __name__=='__main__':
 	"""
 	Kod testuj¹cy.
+
+	W wersji ca³kowicie odkomentowanej, pobiera paczki MPK, po czym 
+	porównuje linie i przystanki ze strony z tymi z paczki. Na dzieñ 
+	dzisiejszy œrednio przydatne, bo przystanki nie maj¹ dzia³aj¹cego 
+	__eq__ (TODO) (generalnie przeprojektowaæ struktury danych tutaj)
 	"""
 	#pobierz_paczki()
-	z_paczki = Linia.listuj_linie('file://%s/' % os.path.realpath('rozpakowane'))
-	#ze_strony = Linia.listuj_linie('http://www.mpk.lodz.pl/rozklady/')
-	#assert(z_paczki==ze_strony)
+	z_paczki = Linia.listuj_linie('file://%s/' % 
+		os.path.realpath('rozpakowane'))
+	ze_strony = Linia.listuj_linie('http://www.mpk.lodz.pl/rozklady/')
+	assert(z_paczki==ze_strony)
 	przetworzonych = 0
 	z_bledami = 0
-	for i in range(len(z_paczki)):
+	for i in range(len(ze_strony)):
+	#for i in range(len(z_paczki)):
 		przetworzonych += 1
-		#print("Porownuje %s i %s..." % (
-		#	z_paczki[i].nazwa, ze_strony[i].nazwa))
+		print("Porownuje %s..." % ( z_paczki[i].nazwa))
 		przystanki_z_paczki = z_paczki[i].pobierz_przystanki()
-		#print("Teraz bêdzie ze strony.")
-		#przystanki_ze_strony = ze_strony[i].pobierz_przystanki()
-		#if(przystanki_z_paczki!=przystanki_ze_strony):
-		#	print("Ró¿nica!")
-		#	z_bledami += 1
+		przystanki_ze_strony = ze_strony[i].pobierz_przystanki()
+		if(przystanki_z_paczki!=przystanki_ze_strony):
+			print("Ró¿nica!")
+			z_bledami += 1
 		#assert(przystanki_z_paczki==przystanki_ze_strony)
-		#sys.exit(0) #USUN¥Æ PO TESTACH
-	print("Przetworzonych: %d, z b³êdami: %d" % (
+	print("Przetworzonych linii: %d, z b³êdami: %d" % (
 		przetworzonych, z_bledami))
 

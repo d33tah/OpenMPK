@@ -19,9 +19,7 @@ import re #wyra¿enia regularne
 #za³aduj biblioteki z Pythona 2/3 ze spójnymi nazwami
 if sys.version.startswith('2'):
 	from urllib2 import urlopen
-	from urllib2 import quote
 elif sys.version.startswith('3'):
-	from urllib.parse import quote
 	from urllib.request import urlopen
 
 from util import popraw_file_url, wybierz_ramke, makedir_quiet
@@ -33,25 +31,36 @@ class Rozklad:
 		oprócz sobót', 'W soboty', 'W niedziela i œwiêta', 'Dnia x'
 		itp.
 		"""
+
+		#Z za³o¿enia, nazwê katalogu mamy ustawion¹ przez klasê Linia.
+		#Tworzymy go i otwieramy rozklad.csv dla danego podkatalogu i.
 		nowy_katalog = "%s/%d" % (self.nazwa_katalogu, i)
 		makedir_quiet(nowy_katalog)
 		plik = open("%s/rozklad.csv" % nowy_katalog, 'w')
+
+		#Wybieramy tr'ki z godzinami i minutami. Ma byæ ich tyle samo.
 		tr_godziny = godziny.xpath('.//tr')
 		tr_minuty = minuty.xpath('.//tr')
 		assert(len(tr_godziny)==len(tr_minuty))
+
+		#Przechodzimy przez ka¿d¹ godzinê.
 		for i in range(len(tr_godziny)):
 			godzina = tr_godziny[i].text_content()
 			godzina = int(godzina)
 			wiersz_minut = tr_minuty[i]
-			for td_minuta in tr_minuty[i].xpath('.//td'):
-				#TODO: poprawne przetwarzanie x,y na koñcu.
+			#Przechodzimy przez ka¿d¹ minutê.
+			for td_minuta in wiersz_minut.xpath('.//td'):
 				minuta = td_minuta.text_content()
-				#gdybym wiedzia³, jak ten kod siê rozroœnie,
-				#rozwi¹za³bym to inaczej.
+				#TODO: poprawne przetwarzanie liter na koñcu.
+				#Gdybym wiedzia³, jak ten kod siê rozroœnie,
+				#rozwi¹za³bym to inaczej...
 				for litera in ('x','y','A','B','C','N','D',
 						'd','a','s','T','R','z'):
+					#Obetnij literkê na koñcu.
 					minuta = minuta.rstrip(litera)
 				if minuta=='-':
+					#Siê znaczy - w tej kolumnie pod t¹ 
+					#godzin¹ nic nie ma.
 					continue
 				minuta = int(minuta)
 				assert(godzina<24 and minuta<60)
@@ -74,46 +83,73 @@ class Rozklad:
 		kod_html_rozklad = urlopen(docelowy_url).read()
 		tree = html.fromstring(kod_html_rozklad.decode('windows-1250'))
 		if url.find('ramka.html?l=')!=-1: #wersja z ZIPa
+			#wybieramy l= oraz p= z URL'a i symulujemy dzia³anie
+			#kodu JS w ZIPach - ³adujemy odpowiedni plik.
 			par = re.findall('\?l=(.*?)&p=(.*?)&k',url)[0]
-			nowy_url = "%s/%s/%s.htm" % (stary_base_url,par[0],par[1])
-			print(nowy_url) #USUN¥Æ PO TESTACH
+			nowy_url = "%s/%s/%s.htm" % (
+					stary_base_url,par[0],par[1])
 			try: #USUN¥Æ PO TESTACH
 				nowy_html = urlopen(nowy_url).read()
 			except:
 				print("t³umiê b³¹d pobierania: %s" % nowy_url)
 				return
-			tree = html.fromstring(nowy_html.decode('windows-1250'))
+			tree = html.fromstring(
+					nowy_html.decode('windows-1250'))
 		else: #wersja ze strony
 			tree = wybierz_ramke(tree,'T',base_url)
 
+		#Wybieramy dwie g³ówne tabele.
 		glowne_tabele = tree.xpath('//td [@valign="TOP"]')
 		assert(len(glowne_tabele)==2)
 
+		#Nastêpnie, wyci¹gamy tabelê z czasami oraz rozk³adem.
 		tabela_z_czasami = glowne_tabele[0]
 		tabela_z_rozkladem = glowne_tabele[1].xpath('./table')[0]
 		assert(len(tabela_z_rozkladem.xpath('./tr'))==4)
 
-		id_przystanku_td = tree.xpath(
-				'//td [@align="CENTER"] [@colspan="2"] ')[0]
-		id_przystanku_tekst = id_przystanku_td.text_content()
-		id_przystanku = re.findall('.*\((.*?)\)$',id_przystanku_tekst)[0]
+		#ID przystanku jest w takim TD, który nie ma ustawionej klasy
+		#a jednoczeœnie ma colspan=2 i align=center.
+		id_przystanku_td = tree.xpath('//td[not(@class="naglczas") 
+				and @align="CENTER" and @colspan="2"]')
+		assert(len(id_przystanku_td)==1)
+		#TODO: Mo¿e to jest lepsze miejsce do wyci¹gania nazw 
+		#przystanków?
+		id_przystanku_tekst = id_przystanku_td[0].text_content()
+		#Wzorzec - coœtam, coœtam w nawiasie, koniec. Interesuje nas
+		#to drugie coœtam.
+		id_przystanku = re.findall('.*\((.*?)\)$',
+				id_przystanku_tekst)[0]
+		#Ustawiamy to zwracanemu obiektowi.
 		zwracany_rozklad.id_przystanku = id_przystanku
 	
-		nazwa_katalogu = 'przetworzone/rozklady/%s/%s' % (nazwa_linii, id_przystanku)
+		#Tworzymy katalog dla tego konkretnego rozk³adu.
+		nazwa_katalogu = 'przetworzone/rozklady/%s/%s' % (nazwa_linii,
+				id_przystanku)
 		makedir_quiet(nazwa_katalogu)
 
+		#To te¿ ustawiamy zwracanemu obiektowi.
 		zwracany_rozklad.nazwa_katalogu = nazwa_katalogu
+		
+		#Wybieramy tr'ki z tabeli z rozk³adem. Rozk³ad to drugi tr,
+		#nag³ówek ('W niedziele/dni robocze' itp) jest w pierwszym.
 		wiersze_tabeli_z_rozkladem = tabela_z_rozkladem.xpath('./tr')
 		rozklad = wiersze_tabeli_z_rozkladem[2]
 		naglowki = wiersze_tabeli_z_rozkladem[0]
-		kolumny_rozkladu = rozklad.xpath('./td')
+
+		#Otwieramy plik na nag³ówki.
 		plik_naglowki = open('%s/naglowki.csv' % nazwa_katalogu ,'w')
+
+		#Wyci¹gamy z rozk³adu kolumny i iterujemy od 0 do po³owy ich 
+		#liczby.
+		kolumny_rozkladu = rozklad.xpath('./td')
 		for i in range(int(len(kolumny_rozkladu)/2)):
-			print(i) #USUN¥Æ PO TESTACH
+			#Zczytujemy nazwê nag³ówka i zapisujemy j¹.
 			nazwa_naglowka = naglowki[i].text_content()
 			print("%s,%s" % (i,nazwa_naglowka),file=plik_naglowki)
+			#Przetwarzamy parê kolumn rozk³adu - godziny i minuty.
 			zwracany_rozklad.przetworz_kolumne_rozkladu(
-					kolumny_rozkladu[i*2],kolumny_rozkladu[i*2+1],i)
+					kolumny_rozkladu[i*2],
+					kolumny_rozkladu[i*2+1],i)
 		return zwracany_rozklad
 
 if __name__=='__main__':

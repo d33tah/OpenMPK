@@ -28,6 +28,11 @@ elif sys.version.startswith('3'):
 
 
 def makedir_quiet(dirname):
+	"""
+	Nie chcia³o mi siê tysi¹c razy pisaæ tej samej konstrukcji, wiêc 
+	zrobi³em sobie funkcjê, która tworzy katalog i t³umi b³¹d wynikaj¹cy
+	z tego, ¿e on ju¿ istnieje.
+	"""
 	try:
 		os.makedirs(dirname)
 	except os.error:

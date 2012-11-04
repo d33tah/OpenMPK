@@ -19,9 +19,7 @@ import os #path.exists
 #za³aduj biblioteki z Pythona 2/3 ze spójnymi nazwami
 if sys.version.startswith('2'):
 	from urllib2 import urlopen
-	from urllib2 import quote
 elif sys.version.startswith('3'):
-	from urllib.parse import quote
 	from urllib.request import urlopen
 
 from util import wybierz_ramke, makedir_quiet
@@ -58,65 +56,92 @@ class Linia:
 		"""
 		Wstêpny kod obs³ugi przesiadek. Klika w link "przesiadki" dla
 		danego przystanku i listuje, jakie linie s¹ na danym 
-		przystanku.
+		przystanku. UWAGA, du¿e.
 		"""
 		url = link.attrib['href']
+
+		#wyci¹gamy treœæ przed ostatnim ukoœnikiem jako 
+		#base_url_rozkladu.
 		base_url_rozkladu = re.findall('^(.*)/(.*)$',
 						self.url)[0][0]+'/'
+
+		#B³êdy tego typu maj¹ miejsce w ZIPach MPK. PóŸniej im to 
+		#pewnie zg³oszê.
 		docelowy_url = base_url_rozkladu+url 
 		try:
 			kod_html_przesiadki = urlopen(docelowy_url).read()
 		except:
 			print("t³umiê b³¹d pobierania: %s" % docelowy_url)
 			return
-
-			
+		
 		tree = html.fromstring(kod_html_przesiadki. \
 					decode('windows-1250'))
 
+		#Dane przystanku s¹ w jakimœ divie albo foncie. Ma byæ jeden.
 		dane_przystanku_el = tree.xpath(
 				'//*[self::font or self::div]')
 		assert(len(dane_przystanku_el)==1)
 		dane_przystanku_tekst=dane_przystanku_el[0].text_content()
+		#Dzielimy to wed³ug wzorca - coœtam, coœtam w nawiasie, koniec.
 		dane_przystanku = re.findall('(.*)\((.*?)\)$',
 				dane_przystanku_tekst)[0]
-		nazwa_przystanku = dane_przystanku[0]
-		id_przystanku = dane_przystanku[1]
+		nazwa_przystanku = dane_przystanku[0] #pierwsze coœtam
+		id_przystanku = dane_przystanku[1] #drugie coœtam
 		
 		nazwa_pliku_przesiadki = 'przetworzone/przesiadki/%s.txt' % \
 				id_przystanku
+		"""
+		Je¿eli istnieje ju¿ plik z przesiadkami, ustawiamy plik na 
+		None, ¿eby go nie dopisywaæ do bazy przesiadek.	Przy okazji, 
+		jeœli nie ma go w przesiadkach, dopiszmy go te¿	do 
+		nazwy_przystankow.txt.
+		"""
 		if not os.path.exists(nazwa_pliku_przesiadki):
 			makedir_quiet('przetworzone/przesiadki')
 			plik = open(nazwa_pliku_przesiadki,'a')
-			plik_przystanki = open('przetworzone/nazwy_przystankow.txt','a')
-			print("%s,%s" % (id_przystanku,nazwa_przystanku),file=plik_przystanki)
+
+			plik_przystanki = open('przetworzone/'+\
+					'nazwy_przystankow.txt','a')
+			print("%s,%s" % (id_przystanku,nazwa_przystanku),
+					file=plik_przystanki)
 			plik_przystanki.close()
 		else:
 			plik = None
 		
+		#przechodzimy przez ka¿dy tag <p>
 		for p in tree.xpath('//p'):
+			#dotyczy tylko strony WWW
 			if p.text_content().endswith('na mapie'):
 				continue
+			#je¿eli potem jest ul, to najprawdopodobniej jest to
+			#lista przesiadek.
 			nast_el = p.getnext()
 			if(nast_el.tag=='ul'):
 				for el in nast_el.xpath('li'):
 					#uwaga na link! znowu bêdzie problem
 					#z ramka.html w ZIPie
 					link = el.xpath('a')[0]
-					nazwa_linii = link.text_content().strip()
+					nazwa_linii = link.text_content()
+					nazwa_linii = nazwa_linii.strip()
 					if plik:
-						print('"%s"' % nazwa_linii, 
+						print('%s' % nazwa_linii, 
 								file=plik)
-				break #chyba, ¿e nas interesuj¹ linie w pobli¿u?
+				break #chyba, ¿e potrzebujemy linie w pobli¿u?
 
 	def przetworz_kierunek(self,kierunek,i):
 		"""
 		Przetwarzamy pojedynczy kierunek jazdy z listy przystanków.
+		Oznacza to, ¿e przejdziemy przez wszystkie przystanki w nim,
+		ka¿dy zapiszemy w liœcie przystanków danego kierunku, a poza
+		tym obs³u¿ymy przesiadki i rozk³ad.
 		"""
-		nazwa_katalogu = 'przetworzone/lista_przystankow/%s' % self.nazwa
+		
+		#utwórz na wszelki wypadek katalog na listy przystanków,
+		#a nastêpnie otwórz plik_lista, gdzie dopiszemy i-ty kierunek
+		nazwa_katalogu = 'przetworzone/lista_przystankow/'+self.nazwa
 		makedir_quiet(nazwa_katalogu)
 		plik_lista = open("%s/%d.csv" % (nazwa_katalogu,i),'w')
-
+		#przejdŸ przez ka¿dy <tr> jako wpis
 		for wpis in kierunek.xpath('.//tr')[1:]: #[1:] = bez nag³ówka
 			ulica_glowna = wpis[0].text_content().strip()
 			link = wpis[2].xpath('a')
@@ -132,17 +157,22 @@ class Linia:
 			else:
 				nazwa_przystanku = wpis[2].text_content()
 
+			#jeœli w trzeciej kolumnie jest link, obs³u¿ 
+			#przesiadki.
 			if wpis[3].xpath('.//a'):
 				self.obsluz_przesiadki(
 						wpis[3].xpath('.//a')[0])
 			"""
 			Na razie pojedynczy przystanek reprezentowany jest
-			wy³¹cznie przez jego nazwê, która na dzieñ dzisiejszy
-			jest kiepsko formatowana. Jak ju¿ zerknê, co powinno
+			wy³¹cznie przez jego nazwê. Jak ju¿ zerknê, co powinno
 			byæ w klasie, utworzê takow¹.
 			"""
-			pelna_nazwa = "%s - %s" % (
+			if ulica_glowna:
+				pelna_nazwa = "%s - %s" % (
 					ulica_glowna,nazwa_przystanku)
+			else:
+				pelna_nazwa = nazwa_przystanku
+			#dopisz do listy - w pliku i klasie
 			print(pelna_nazwa,file=plik_lista)
 			self.przystanki += [pelna_nazwa]
 
@@ -164,7 +194,6 @@ class Linia:
 			kierunki = tree.xpath('//td [@class="przyst"]')
 			for i in range(len(kierunki)):
 				self.przetworz_kierunek(kierunki[i],i)
-				break #USUN¥Æ PO TESTACH
 
 		return self.przystanki
 
@@ -172,20 +201,18 @@ class Linia:
 	def listuj_linie(url):
 		"""
 		Funkcja wchodzi na podanego URL'a (w przypadku strony MPK, musi
-		nast¹piæ przekierowanie, bo mamy index.jsp, a nie .html) i pobiera
-		listê linii.
+		nast¹piæ przekierowanie, bo mamy index.jsp, a nie .html) i 
+		pobiera listê linii.
 
-		TODO: rozró¿niaæ autobusy dzienne/nocne i tramwaje? Na tej podstronie
-		jest taka mo¿liwoœæ.
+		TODO: rozró¿niaæ autobusy dzienne/nocne i tramwaje? Na tej 
+		podstronie jest taka mo¿liwoœæ.
 		"""
 		kod_html = urlopen(url+'/index.html').read()
 		tree = html.fromstring(kod_html.decode('windows-1250'))
 		przekierowanie = tree.xpath('//meta [@http-equiv="refresh"]')
 		if przekierowanie:
-			"""
-			Wybierz pierwszy element z tej tablicy i weŸ tekst na prawo od 
-			URL w jego 'content'.
-			"""
+			#Wybierz pierwszy element z tej tablicy i weŸ tekst na 
+			#prawo od URL w jego 'content'.
 			nowy_url = przekierowanie[0].attrib['content'].split(
 					'URL=')[-1]
 			kod_html = urlopen(nowy_url).read()
@@ -193,7 +220,8 @@ class Linia:
 
 		linie_tree = wybierz_ramke(tree,'rozklad',url)
 		linie_td = linie_tree.xpath('//div [contains(@id,bx1)]//td \
-				[@class="nagl" and not(contains(.,"Aktualny"))]')
+				[@class="nagl" and not(contains(
+				.,"Aktualny"))]')
 		ret = []
 		
 		makedir_quiet('przetworzone')
@@ -201,10 +229,11 @@ class Linia:
 
 		for linia in linie_td:
 			link = linia.xpath('a')[0]
+			#wytnij "Linia: " z linka i uznaj to za nazwê linii
 			nazwa_linii = link.text_content().lstrip("Linia: ")
-			print(nazwa_linii,file=f)
 			url_linii = url+link.attrib['href']
 			ret += [Linia(nazwa_linii,url_linii,url)]
+			print(nazwa_linii,file=f)
 		return ret
 
 if __name__=='__main__':
