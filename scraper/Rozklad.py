@@ -55,7 +55,8 @@ class Rozklad:
 				#Gdybym wiedzia³, jak ten kod siê rozroœnie,
 				#rozwi¹za³bym to inaczej...
 				for litera in ('x','y','A','B','C','N','D',
-						'd','a','s','T','R','z'):
+						'd','a','s','T','R','z','P',
+						'f','n','J'):
 					#Obetnij literkê na koñcu.
 					minuta = minuta.rstrip(litera)
 				if minuta=='-':
