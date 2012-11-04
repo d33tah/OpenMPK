@@ -220,7 +220,7 @@ class Linia:
 
 		linie_tree = wybierz_ramke(tree,'rozklad',url)
 		linie_td = linie_tree.xpath('//div [contains(@id,bx1)]//td \
-				[@class="nagl" and not(contains(
+				[@class="nagl" and not(contains( \
 				.,"Aktualny"))]')
 		ret = []
 		

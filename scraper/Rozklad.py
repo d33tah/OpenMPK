@@ -109,7 +109,7 @@ class Rozklad:
 
 		#ID przystanku jest w takim TD, który nie ma ustawionej klasy
 		#a jednoczeœnie ma colspan=2 i align=center.
-		id_przystanku_td = tree.xpath('//td[not(@class="naglczas") 
+		id_przystanku_td = tree.xpath('//td[not(@class="naglczas") \
 				and @align="CENTER" and @colspan="2"]')
 		assert(len(id_przystanku_td)==1)
 		#TODO: Mo¿e to jest lepsze miejsce do wyci¹gania nazw 
