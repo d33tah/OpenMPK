@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3 -u
 # -*- coding: windows-1250 -*-
 
 """
@@ -14,15 +14,7 @@ from __future__ import print_function
 import sys #exit(), version
 from lxml import html #parsowanie HTML
 import re #wyra¿enia regularne
-
-if not sys.version.startswith('3'):
-	print("""
-	Ten program zosta³ przeznaczony do uruchamiania pod interpreterem
-	Pythona w wersji 3.x W teorii wszystko powinno dzia³aæ, ale na wszelki
-	wypadek przerywam dzia³anie programu.
-	""")
-	sys.exit(1) #zakomentuj t¹ linijkê, jeœli czujesz siê odwa¿ny :P
-	print("Program kontynuuje pracê...")
+import os #path.exists
 
 #za³aduj biblioteki z Pythona 2/3 ze spójnymi nazwami
 if sys.version.startswith('2'):
@@ -32,7 +24,7 @@ elif sys.version.startswith('3'):
 	from urllib.parse import quote
 	from urllib.request import urlopen
 
-from util import wybierz_ramke
+from util import wybierz_ramke, makedir_quiet
 from Rozklad import Rozklad
 
 class Linia:
@@ -72,12 +64,39 @@ class Linia:
 		base_url_rozkladu = re.findall('^(.*)/(.*)$',
 						self.url)[0][0]+'/'
 		docelowy_url = base_url_rozkladu+url 
-		kod_html_przesiadki = urlopen(docelowy_url).read()
+		try:
+			kod_html_przesiadki = urlopen(docelowy_url).read()
+		except:
+			print("t³umiê b³¹d pobierania: %s" % docelowy_url)
+			return
+
+			
 		tree = html.fromstring(kod_html_przesiadki. \
 					decode('windows-1250'))
+
+		dane_przystanku_el = tree.xpath(
+				'//*[self::font or self::div]')
+		assert(len(dane_przystanku_el)==1)
+		dane_przystanku_tekst=dane_przystanku_el[0].text_content()
+		dane_przystanku = re.findall('(.*)\((.*?)\)$',
+				dane_przystanku_tekst)[0]
+		nazwa_przystanku = dane_przystanku[0]
+		id_przystanku = dane_przystanku[1]
+		
+		nazwa_pliku_przesiadki = 'przetworzone/przesiadki/%s.txt' % \
+				id_przystanku
+		if not os.path.exists(nazwa_pliku_przesiadki):
+			makedir_quiet('przetworzone/przesiadki')
+			plik = open(nazwa_pliku_przesiadki,'a')
+			plik_przystanki = open('przetworzone/nazwy_przystankow.txt','a')
+			print("%s,%s" % (id_przystanku,nazwa_przystanku),file=plik_przystanki)
+			plik_przystanki.close()
+		else:
+			plik = None
+		
 		for p in tree.xpath('//p'):
 			if p.text_content().endswith('na mapie'):
-				next #mapa nas na razie nie interesuje.
+				continue
 			nast_el = p.getnext()
 			if(nast_el.tag=='ul'):
 				for el in nast_el.xpath('li'):
@@ -85,13 +104,19 @@ class Linia:
 					#z ramka.html w ZIPie
 					link = el.xpath('a')[0]
 					nazwa_linii = link.text_content().strip()
-					print('"%s"' % nazwa_linii)
+					if plik:
+						print('"%s"' % nazwa_linii, 
+								file=plik)
 				break #chyba, ¿e nas interesuj¹ linie w pobli¿u?
 
-	def przetworz_kierunek(self,kierunek):
+	def przetworz_kierunek(self,kierunek,i):
 		"""
 		Przetwarzamy pojedynczy kierunek jazdy z listy przystanków.
 		"""
+		nazwa_katalogu = 'przetworzone/lista_przystankow/%s' % self.nazwa
+		makedir_quiet(nazwa_katalogu)
+		plik_lista = open("%s/%d.csv" % (nazwa_katalogu,i),'w')
+
 		for wpis in kierunek.xpath('.//tr')[1:]: #[1:] = bez nag³ówka
 			ulica_glowna = wpis[0].text_content().strip()
 			link = wpis[2].xpath('a')
@@ -103,9 +128,10 @@ class Linia:
 				#przetwarzamy rozk³ad jazdy, w celach testowych
 				Rozklad.przetworz_rozklad(url_rozkladu,
 						base_url_rozkladu,
-						self.base_url)
+						self.base_url,self.nazwa)
 			else:
 				nazwa_przystanku = wpis[2].text_content()
+
 			if wpis[3].xpath('.//a'):
 				self.obsluz_przesiadki(
 						wpis[3].xpath('.//a')[0])
@@ -115,8 +141,10 @@ class Linia:
 			jest kiepsko formatowana. Jak ju¿ zerknê, co powinno
 			byæ w klasie, utworzê takow¹.
 			"""
-			self.przystanki += ["%s - %s" % (
-				ulica_glowna,nazwa_przystanku)]
+			pelna_nazwa = "%s - %s" % (
+					ulica_glowna,nazwa_przystanku)
+			print(pelna_nazwa,file=plik_lista)
+			self.przystanki += [pelna_nazwa]
 
 	def pobierz_przystanki(self):
 		"""
@@ -133,12 +161,14 @@ class Linia:
 			tree = wybierz_ramke(tree,'rozklad',self.base_url)
 			tree = wybierz_ramke(tree,'D',self.base_url)
 		
-			for kierunek in tree.xpath('//td [@class="przyst"]'):
-				self.przetworz_kierunek(kierunek)
+			kierunki = tree.xpath('//td [@class="przyst"]')
+			for i in range(len(kierunki)):
+				self.przetworz_kierunek(kierunki[i],i)
 				break #USUN¥Æ PO TESTACH
 
 		return self.przystanki
 
+	@staticmethod
 	def listuj_linie(url):
 		"""
 		Funkcja wchodzi na podanego URL'a (w przypadku strony MPK, musi
@@ -165,9 +195,14 @@ class Linia:
 		linie_td = linie_tree.xpath('//div [contains(@id,bx1)]//td \
 				[@class="nagl" and not(contains(.,"Aktualny"))]')
 		ret = []
+		
+		makedir_quiet('przetworzone')
+		f = open('przetworzone/lista_linii.txt','w')
+
 		for linia in linie_td:
 			link = linia.xpath('a')[0]
 			nazwa_linii = link.text_content().lstrip("Linia: ")
+			print(nazwa_linii,file=f)
 			url_linii = url+link.attrib['href']
 			ret += [Linia(nazwa_linii,url_linii,url)]
 		return ret

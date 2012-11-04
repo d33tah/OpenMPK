@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3 -u
 # -*- coding: windows-1250 -*-
 
 """
@@ -15,15 +15,6 @@ import sys #exit(), version
 import os #do sprawdzania czy katalog istnieje
 import shutil #wygodne usuwanie katalogu
 import zipfile #pliki .zip
-
-if not sys.version.startswith('3'):
-      print("""
-      Ten program zosta³ przeznaczony do uruchamiania pod interpreterem
-      Pythona w wersji 3.x W teorii wszystko powinno dzia³aæ, ale na wszelki
-      wypadek przerywam dzia³anie programu.
-      """)
-      sys.exit(1) #zakomentuj t¹ linijkê, jeœli czujesz siê odwa¿ny :P
-      print("Program kontynuuje pracê...")
 
 #za³aduj biblioteki z Pythona 2/3 ze spójnymi nazwami
 if sys.version.startswith('2'):
@@ -82,7 +73,6 @@ def pobierz_paczki():
 	os.makedirs('rozpakowane')
 	for nazwa_pliku in nazwy_plikow:
 		rozpakuj_plik('pliki/'+nazwa_pliku,'rozpakowane')
-
 
 if __name__=='__main__':
 	"""

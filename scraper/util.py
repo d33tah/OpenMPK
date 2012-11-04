@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3 -u
 # -*- coding: windows-1250 -*-
 
 """
@@ -14,17 +14,9 @@ jakim s¹ strony MPK.
 from __future__ import print_function
 
 import sys #exit(), version
+import os #makedir
 from lxml import html #parsowanie HTML
 import re #wyra¿enia regularne
-
-if not sys.version.startswith('3'):
-	print("""
-	Ten program zosta³ przeznaczony do uruchamiania pod interpreterem
-	Pythona w wersji 3.x W teorii wszystko powinno dzia³aæ, ale na wszelki
-	wypadek przerywam dzia³anie programu.
-	""")
-	sys.exit(1) #zakomentuj t¹ linijkê, jeœli czujesz siê odwa¿ny :P
-	print("Program kontynuuje pracê...")
 
 #za³aduj biblioteki z Pythona 2/3 ze spójnymi nazwami
 if sys.version.startswith('2'):
@@ -33,6 +25,13 @@ if sys.version.startswith('2'):
 elif sys.version.startswith('3'):
 	from urllib.parse import quote
 	from urllib.request import urlopen
+
+
+def makedir_quiet(dirname):
+	try:
+		os.makedirs(dirname)
+	except os.error:
+		pass
 
 
 def popraw_file_url(url):
