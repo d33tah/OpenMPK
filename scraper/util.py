@@ -85,9 +85,6 @@ def wybierz_ramke(tree,nazwa_ramki,base_url):
 			podzielone = href.split('?r=')
 			href = podzielone[0]+'?r='+quote(podzielone[1])
 		nowy_url = base_url + href
-		#nowy_kod_html = urlopen(nowy_url).read()
-		#nowy_tree = html.fromstring(
-		#		nowy_kod_html.decode('windows-1250'))
 		nowy_tree = html.parse(nowy_url)
 		return nowy_tree
 	else:

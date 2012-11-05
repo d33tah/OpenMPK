@@ -70,14 +70,10 @@ class Linia:
 		docelowy_url = base_url_rozkladu+url 
 		try:
 			tree = html.parse(docelowy_url)
-			#kod_html_przesiadki = urlopen(docelowy_url).read()
 		except:
 			print("t³umiê b³¹d pobierania: %s" % docelowy_url)
 			return
 		
-		#tree = html.fromstring(kod_html_przesiadki. \
-		#			decode('windows-1250'))
-
 		#Dane przystanku s¹ w jakimœ divie albo foncie. Ma byæ jeden.
 		dane_przystanku_el = tree.xpath(
 				'//*[self::font or self::div]')
@@ -185,10 +181,6 @@ class Linia:
 		"""
 		if not self.przystanki:
 
-			#kod_html_przystanki = urlopen(self.url).read()
-			#tree = html.fromstring(kod_html_przystanki. \
-			#		decode('windows-1250'))
-
 			tree = html.parse(self.url)
 
 			tree = wybierz_ramke(tree,'rozklad',self.base_url)
@@ -210,8 +202,6 @@ class Linia:
 		TODO: rozró¿niaæ autobusy dzienne/nocne i tramwaje? Na tej 
 		podstronie jest taka mo¿liwoœæ.
 		"""
-		#kod_html = urlopen(url+'/index.html').read()
-		#tree = html.fromstring(kod_html.decode('windows-1250'))
 		tree = html.parse(url+'/index.html')
 		przekierowanie = tree.xpath('//meta [@http-equiv="refresh"]')
 		if przekierowanie:
@@ -219,8 +209,6 @@ class Linia:
 			#prawo od URL w jego 'content'.
 			nowy_url = przekierowanie[0].attrib['content'].split(
 					'URL=')[-1]
-			#kod_html = urlopen(nowy_url).read()
-			#tree = html.fromstring(kod_html.decode('windows-1250'))
 			tree = html.parse(nowy_url)
 
 		linie_tree = wybierz_ramke(tree,'rozklad',url)

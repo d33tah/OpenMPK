@@ -81,9 +81,7 @@ class Rozklad:
 		zwracany_rozklad = Rozklad()
 
 		docelowy_url = popraw_file_url(base_url+url)
-		#kod_html_rozklad = urlopen(docelowy_url).read()
 		tree = html.parse(docelowy_url)
-		#tree = html.fromstring(kod_html_rozklad.decode('windows-1250'))
 		if url.find('ramka.html?l=')!=-1: #wersja z ZIPa
 			#wybieramy l= oraz p= z URL'a i symulujemy dzia³anie
 			#kodu JS w ZIPach - ³adujemy odpowiedni plik.
@@ -91,7 +89,6 @@ class Rozklad:
 			nowy_url = "%s/%s/%s.htm" % (
 					stary_base_url,par[0],par[1])
 			try: #USUN¥Æ PO TESTACH
-				#nowy_html = urlopen(nowy_url).read()
 				tree = html.parse(nowy_url)
 			except:
 				print("t³umiê b³¹d pobierania: %s" % nowy_url)
