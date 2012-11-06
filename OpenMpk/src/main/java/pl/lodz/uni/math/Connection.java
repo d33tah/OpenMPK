@@ -2,6 +2,11 @@ package pl.lodz.uni.math;
 
 import java.util.Date;
 
+/**
+ * Mój pierwszy commit
+ * @author Jerzy
+ *
+ */
 public class Connection {
 	private Stop from;
 	private Stop to;
