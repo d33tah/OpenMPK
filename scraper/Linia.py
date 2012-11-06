@@ -83,6 +83,14 @@ class Linia:
 		dane_przystanku = re.findall('(.*)\((.*?)\)$',
 				dane_przystanku_tekst)[0]
 		nazwa_przystanku = dane_przystanku[0] #pierwsze coœtam
+
+		#Poni¿sze trzy linijki daj¹ pewne wyobra¿enie o tym jakiej 
+		#jakoœci s¹ dane z ZIPa.
+		nazwa_przystanku = nazwa_przystanku.lstrip('null')
+		nazwa_przystanku = nazwa_przystanku.lstrip()
+		nazwa_przystanku = nazwa_przystanku.lstrip('- ')
+		nazwa_przystanku = nazwa_przystanku.rstrip()
+
 		id_przystanku = dane_przystanku[1] #drugie coœtam
 		
 		nazwa_pliku_przesiadki = 'przetworzone/przesiadki/%s.txt' % \
@@ -120,9 +128,12 @@ class Linia:
 					link = el.xpath('a')[0]
 					nazwa_linii = link.text_content()
 					nazwa_linii = nazwa_linii.strip()
+					kier_tekst = link.tail
+					kier_tekst = kier_tekst.split('-->')[1]
+					kier_tekst = kier_tekst.strip()
 					if plik:
-						print('%s' % nazwa_linii, 
-								file=plik)
+						print('%s,%s' % (nazwa_linii, 
+							kier_tekst), file=plik)
 				break #chyba, ¿e potrzebujemy linie w pobli¿u?
 
 	def przetworz_kierunek(self,kierunek,i):
