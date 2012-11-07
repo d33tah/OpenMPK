@@ -1,20 +1,40 @@
 package pl.lodz.uni.math;
 
-import java.util.List;
-import java.util.Map;
+import java.util.LinkedList;
+import java.util.HashMap;
 
 public class Graph {
-	private Map<Stop, List<Connection>> stops;
+	private HashMap<Stop, LinkedList<Connection>> stops;
+	private HashMap<String,Stop> stopsMap;
 	
-	public Map<Stop, List<Connection>> getStops() {
+	public HashMap<Stop, LinkedList<Connection>> getStops() {
 		return stops;
 	}
 
-	public void setStops(Map<Stop, List<Connection>> stops) {
-		this.stops = stops;
+	public Graph() {
+		stops = new HashMap<Stop, LinkedList<Connection>>();
+		stopsMap = new HashMap<String,Stop>();
 	}
-	
-	public void addStop(Stop stop, List<Connection> connections ) {
-		stops.put(stop, connections);
+
+
+	public void addStop(String id, Stop stop) {
+		stopsMap.put(id,stop);
+	}
+
+	public Stop getStop(String id) {
+		return stopsMap.get(id);
+	}
+
+	public void addConnection(Stop stop, Connection connection) {
+		if(!stops.containsKey(stop)) {
+			LinkedList<Connection> list = new LinkedList<Connection>();
+			list.addLast(connection);
+			stops.put(stop,list);
+		}
+		else {
+			LinkedList<Connection> list = stops.get(stop);
+			list.addLast(connection);
+			stops.put(stop,list);
+		}
 	}
 }

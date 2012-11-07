@@ -69,7 +69,7 @@ class Rozklad:
 				print(czas,file=plik)
 
 	@staticmethod
-	def przetworz_rozklad(url,base_url,stary_base_url,nazwa_linii):
+	def przetworz_rozklad(url,base_url,stary_base_url,nazwa_linii,i):
 		"""
 		Pobieramy rozk³ad i przetwarzamy go. Do odczytania ramek
 		potrzebne by³o czary_mary z base_url i stary_base_url.
@@ -117,14 +117,23 @@ class Rozklad:
 		id_przystanku_tekst = id_przystanku_td[0].text_content()
 		#Wzorzec - coœtam, coœtam w nawiasie, koniec. Interesuje nas
 		#to drugie coœtam.
-		id_przystanku = re.findall('.*\((.*?)\)$',
+		id_przystanku = re.findall('(.*)\((.*?)\)$',
 				id_przystanku_tekst)[0]
 		#Ustawiamy to zwracanemu obiektowi.
-		zwracany_rozklad.id_przystanku = id_przystanku
+		zwracany_rozklad.id_przystanku = id_przystanku[1]
+
+		#utwórz na wszelki wypadek katalog na listy przystanków,
+		#a nastêpnie otwórz plik_lista, gdzie dopiszemy i-ty kierunek
+		nazwa_katalogu = 'przetworzone/lista_przystankow/'+nazwa_linii
+		makedir_quiet(nazwa_katalogu)
+		plik_lista = open("%s/%d.csv" % (nazwa_katalogu,i),'a')
+		print("%s" % id_przystanku[1], file=plik_lista)
+		plik_lista.close()
+
 	
 		#Tworzymy katalog dla tego konkretnego rozk³adu.
 		nazwa_katalogu = 'przetworzone/rozklady/%s/%s' % (nazwa_linii,
-				id_przystanku)
+				id_przystanku[1])
 		makedir_quiet(nazwa_katalogu)
 
 		#To te¿ ustawiamy zwracanemu obiektowi.

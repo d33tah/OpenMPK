@@ -144,12 +144,7 @@ class Linia:
 		tym obs³u¿ymy przesiadki i rozk³ad.
 		"""
 		
-		#utwórz na wszelki wypadek katalog na listy przystanków,
-		#a nastêpnie otwórz plik_lista, gdzie dopiszemy i-ty kierunek
-		nazwa_katalogu = 'przetworzone/lista_przystankow/'+self.nazwa
-		makedir_quiet(nazwa_katalogu)
-		plik_lista = open("%s/%d.csv" % (nazwa_katalogu,i),'w')
-		#przejdŸ przez ka¿dy <tr> jako wpis
+			#przejdŸ przez ka¿dy <tr> jako wpis
 		for wpis in kierunek.xpath('.//tr')[1:]: #[1:] = bez nag³ówka
 			ulica_glowna = wpis[0].text_content().strip()
 			link = wpis[2].xpath('a')
@@ -161,7 +156,7 @@ class Linia:
 				#przetwarzamy rozk³ad jazdy, w celach testowych
 				Rozklad.przetworz_rozklad(url_rozkladu,
 						base_url_rozkladu,
-						self.base_url,self.nazwa)
+						self.base_url,self.nazwa,i)
 			else:
 				nazwa_przystanku = wpis[2].text_content()
 
@@ -181,7 +176,6 @@ class Linia:
 			else:
 				pelna_nazwa = nazwa_przystanku
 			#dopisz do listy - w pliku i klasie
-			print(pelna_nazwa,file=plik_lista)
 			self.przystanki += [pelna_nazwa]
 
 	def pobierz_przystanki(self):
@@ -197,7 +191,15 @@ class Linia:
 			tree = wybierz_ramke(tree,'rozklad',self.base_url)
 			tree = wybierz_ramke(tree,'D',self.base_url)
 		
+			kat_linia = 'przetworzone/lista_przystankow/%s' % \
+					self.nazwa
+
 			kierunki = tree.xpath('//td [@class="przyst"]')
+			makedir_quiet(kat_linia)
+			plik_ilosc_kier = open(kat_linia+'/il_kier.csv','w')
+			print(len(kierunki),file=plik_ilosc_kier)
+			plik_ilosc_kier.close()
+
 			for i in range(len(kierunki)):
 				self.przetworz_kierunek(kierunki[i],i)
 
