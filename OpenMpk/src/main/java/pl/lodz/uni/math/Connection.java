@@ -2,15 +2,11 @@ package pl.lodz.uni.math;
 
 import java.util.Date;
 
-/**
- * Mój pierwszy commit
- * @author Jerzy
- *
- */
 public class Connection {
 	private Stop from;
 	private Stop to;
 	private long time;	
+	private Line line;
 	
 	public Stop getFrom() {
 		return from;
@@ -29,5 +25,13 @@ public class Connection {
 	}
 	public void setTime(long time) {
 		this.time = time;
+	}
+	public Line getLine()
+	{
+		return line;
+	}
+	public void setLine(Line line)
+	{
+		this.line = line;
 	}
 }
