@@ -5,33 +5,42 @@ import java.util.Date;
 public class Connection {
 	private Stop from;
 	private Stop to;
-	private long time;	
+	private int time;
 	private Line line;
-	
+
+	public Connection(Stop from, Stop to) {
+
+	}
+
 	public Stop getFrom() {
 		return from;
 	}
+
 	public void setFrom(Stop from) {
 		this.from = from;
 	}
+
 	public Stop getTo() {
 		return to;
 	}
+
 	public void setTo(Stop to) {
 		this.to = to;
 	}
-	public long getTime(Date givenTime) {
+
+	public int getTime(Date givenTime) {
 		return time;
 	}
-	public void setTime(long time) {
+
+	public void setTime(int time) {
 		this.time = time;
 	}
-	public Line getLine()
-	{
+
+	public Line getLine() {
 		return line;
 	}
-	public void setLine(Line line)
-	{
+
+	public void setLine(Line line) {
 		this.line = line;
 	}
 }
