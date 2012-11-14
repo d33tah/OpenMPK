@@ -2,10 +2,11 @@ package pl.lodz.uni.math;
 
 import java.util.LinkedList;
 import java.util.HashMap;
+import java.util.Map;
 
 public class Graph {
 	private HashMap<Stop, LinkedList<Connection>> stops;
-	private HashMap<String,Stop> stopsMap;
+	private Map<String,Stop> stopsMap;
 	
 	public HashMap<Stop, LinkedList<Connection>> getStops() {
 		return stops;

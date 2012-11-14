@@ -87,7 +87,7 @@ public class GraphLoader {
 			while ((strLine = br.readLine()) != null) {
 				for(int i=0; i<Integer.parseInt(strLine); i++)
 				{
-				parseDirection(lineName,i);
+				parseDirection(lineName,i,line);
 				}
 			}
 			in.close();
