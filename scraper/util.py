@@ -1,0 +1,98 @@
+#!/usr/bin/python3 -u
+# -*- coding: windows-1250 -*-
+
+"""
+util.py
+
+Tutaj bêd¹ funkcje u¿ytkowe, których mi brakuje w Pythonie i tych jego 
+bibliotekach, które znam. Funkcje bêd¹ oczywiœcie uzbrojone w zbiór hacków
+potrzebnych, aby byæ w stanie dogadaæ siê z tym cudem myœli programistycznej,
+jakim s¹ strony MPK.
+"""
+
+#na wypadek uruchomienia pod Pythonem 2.x - funkcja print() zamiast operatora
+from __future__ import print_function
+
+import sys #exit(), version
+import os #makedir
+from lxml import html #parsowanie HTML
+import re #wyra¿enia regularne
+
+#za³aduj biblioteki z Pythona 2/3 ze spójnymi nazwami
+if sys.version.startswith('2'):
+	from urllib2 import urlopen
+	from urllib2 import quote
+elif sys.version.startswith('3'):
+	from urllib.parse import quote
+	from urllib.request import urlopen
+
+
+def makedir_quiet(dirname):
+	"""
+	Nie chcia³o mi siê tysi¹c razy pisaæ tej samej konstrukcji, wiêc 
+	zrobi³em sobie funkcjê, która tworzy katalog i t³umi b³¹d wynikaj¹cy
+	z tego, ¿e on ju¿ istnieje.
+	"""
+	try:
+		os.makedirs(dirname)
+	except os.error:
+		pass
+
+
+def popraw_file_url(url):
+	"""
+	HACK.
+
+	Powodem jest sposób, w jaki zorganizowane s¹ strony w pliczkach
+	zip z mpk.lodz.pl. Rozk³ady s¹ tam ³adowane do linie.htm?p1=w1&p2=w2.
+	Oczywiœcie taki plik nie istnieje, wiêc musi zostaæ za³adowany 
+	linie.htm, a reszta tekstu obciêta. Zwracany jest poprawiony URL.
+	"""
+	if url.startswith('file://'):
+		#weŸ A/B i zapisz A w podzielony[0] i B w podzielony[1]
+		podzielony = re.findall('^(.*)/(.*)$',url)[0]
+		#poszukaj znaku zapytania
+		indeks = podzielony[1].find('?')
+		#jeœli znalaz³eœ
+		if indeks!=-1:
+			#zwróæ A/B do tego znaku
+			return podzielony[0]+'/'+podzielony[1][:indeks]
+		else: #w przeciwnych wypadkach zwróæ URL nienaruszony
+			return url
+	else:
+		return url
+
+def wybierz_ramke(tree,nazwa_ramki,base_url):
+	"""
+	Jako, ¿e mamy XXI wiek, strona jest oczywiœcie napisana na ramkach
+	i tabelkach. Skrypt musi byæ tego œwiadomy i pozwoliæ na wybór 
+	odpowiedniej ramki.
+
+	Ta funkcja pobiera obiekt lxml.html, nazwê wyciêtej ramki oraz
+	bazowy adres URL, który ma byæ doklejony do wybranego z src ramki.
+	Zwracany jest nowy (albo i nie, jeœli ramek nie ma) obiekt lxml.html,
+	który ma ju¿ za³adowan¹ zawartoœæ ramki.
+	"""
+	ramka = tree.xpath('//frame [@name="%s"]' % nazwa_ramki)
+	if(len(ramka)==1): #znaleziono ramkê
+		href = ramka[0].attrib['src']
+		"""
+		HACK: je¿eli w linku jest ?r=, to dalej bêdzie tekst 
+		wyœwietlany ¿ywcem na stronie. Trzeba go przepuœciæ przez
+		quote, ale tylko czêœæ po ?r=.
+		"""
+		if href.find('?r=')!=-1:
+			podzielone = href.split('?r=')
+			href = podzielone[0]+'?r='+quote(podzielone[1])
+		nowy_url = base_url + href
+		nowy_tree = html.parse(nowy_url)
+		return nowy_tree
+	else:
+		return tree
+
+if __name__=='__main__':
+	"""
+	Kod testuj¹cy.
+	"""
+	pass #na dzieñ dzisiejszy brak.
+
