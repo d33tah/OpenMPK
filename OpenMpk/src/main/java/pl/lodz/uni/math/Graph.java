@@ -24,4 +24,12 @@ public class Graph {
 		return stopsMap.get(id);
 	}
 
+	public Map<String, Stop> getStopsMap() {
+		return stopsMap;
+	}
+
+	public void setStopsMap(Map<String, Stop> stopsMap) {
+		this.stopsMap = stopsMap;
+	}
+
 }

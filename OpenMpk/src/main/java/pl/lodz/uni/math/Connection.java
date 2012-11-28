@@ -3,21 +3,22 @@ package pl.lodz.uni.math;
 import java.util.Date;
 
 public class Connection {
-	private Stop from;
+	// private Stop from;
 	private Stop to;
 	private int time;
 	private Line line;
 
-	public Connection(Stop from, Stop to) {
-
-	}
-
-	public Stop getFrom() {
-		return from;
-	}
-
-	public void setFrom(Stop from) {
-		this.from = from;
+	/*
+	 * Znamy przystanek poczatkowy public Connection(Stop from, Stop to) {
+	 * 
+	 * }
+	 * 
+	 * public Stop getFrom() { return from; }
+	 * 
+	 * public void setFrom(Stop from) { this.from = from; }
+	 */
+	public Connection(Stop to) {
+		this.to = to;
 	}
 
 	public Stop getTo() {

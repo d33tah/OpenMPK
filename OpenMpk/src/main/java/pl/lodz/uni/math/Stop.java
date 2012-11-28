@@ -4,10 +4,29 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-public class Stop {
+public class Stop implements Comparable<Stop>{
 	private String name;
+	private String id;
+	private String previous;
+	public String getPrevious() {
+		return previous;
+	}
 
+	public void setPrevious(String previous) {
+		this.previous = previous;
+	}
+
+	public int getLength() {
+		return length;
+	}
+
+	public void setLength(int length) {
+		this.length = length;
+	}
+
+	private int length;
 	private List<Connection> connections;
+
 
 	public Stop(String name) {
 		this();
@@ -31,5 +50,18 @@ public class Stop {
 			connections.add(connection);
 		}
 
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public int compareTo(Stop o) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 }

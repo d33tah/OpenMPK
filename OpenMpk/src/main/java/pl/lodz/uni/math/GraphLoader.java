@@ -3,7 +3,7 @@ package pl.lodz.uni.math;
 import java.io.*;
 import java.util.LinkedList; //wybrana w skomplikowanym procesie losowania :P
 import java.util.HashMap;
-
+/*
 public class GraphLoader {
 
 	Graph graph;
@@ -129,3 +129,4 @@ public class GraphLoader {
 		return graph;
 	}
 }
+*/
