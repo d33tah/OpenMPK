@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-public class Stop implements Comparable<Stop>{
+public class Stop{
 	private String name;
 	private String id;
 	private String previous;
@@ -60,8 +60,4 @@ public class Stop implements Comparable<Stop>{
 		this.id = id;
 	}
 
-	public int compareTo(Stop o) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
 }

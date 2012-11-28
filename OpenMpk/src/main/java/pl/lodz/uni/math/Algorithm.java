@@ -28,7 +28,19 @@ public class Algorithm {
 		graf.addStop("C", new Stop("C"));
 		Map<String, Integer> odlegloscTab = new HashMap<String, Integer>();
 		Map<String, String> poprzednikTab = new HashMap<String, String>();
-		PriorityQueue<Stop> kolejkaPrzystankow = new PriorityQueue<Stop>();
+		Comparable<Stop> comm = new Comparable<Stop>() {
+			public static Map<String,Integer> odlegloscTab;
+
+			public int compareTo(Stop o)
+			{
+				odlegloscTab.size(); //zeby sprawdzic zasieg
+				return 0;
+			}
+		};
+		}
+	
+		
+		PriorityQueue<Stop> kolejkaPrzystankow = new PriorityQueue<Stop>(10, comm);
 		/*
 		 * Dijkstra(G,w,s): dla ka¿dego wierzcho³ka v w V[G] wykonaj d[v] :=
 		 * nieskoñczonoœæ poprzednik[v] := niezdefiniowane d[s] := 0 Q := V
