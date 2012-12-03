@@ -26,18 +26,16 @@ public class Algorithm {
 		graf.addStop("A", new Stop("A"));
 		graf.addStop("B", new Stop("B"));
 		graf.addStop("C", new Stop("C"));
-		Map<String, Integer> odlegloscTab = new HashMap<String, Integer>();
+		final Map<String, Integer> odlegloscTab = new HashMap<String, Integer>();
 		Map<String, String> poprzednikTab = new HashMap<String, String>();
-		Comparable<Stop> comm = new Comparable<Stop>() {
-			public static Map<String,Integer> odlegloscTab;
 
-			public int compareTo(Stop o)
-			{
-				odlegloscTab.size(); //zeby sprawdzic zasieg
+		Comparator<Stop> comm = new Comparator<Stop>() {
+
+			public int compare(Stop o1, Stop o2) {
+				odlegloscTab.size();
 				return 0;
 			}
 		};
-		}
 	
 		
 		PriorityQueue<Stop> kolejkaPrzystankow = new PriorityQueue<Stop>(10, comm);
