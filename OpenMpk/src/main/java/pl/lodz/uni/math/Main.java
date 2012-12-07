@@ -10,7 +10,7 @@ public class Main {
 
 		//GraphLoader loader = new GraphLoader();
 		//Graph graph = loader.loadGraph();
-		//System.out.println("Program uruchomi³ siê poprawnie.");
+		System.out.println("Program uruchomi³ siê poprawnie.");
 
 	}
 }

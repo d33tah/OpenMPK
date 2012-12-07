@@ -17,8 +17,9 @@ public class Connection {
 	 * 
 	 * public void setFrom(Stop from) { this.from = from; }
 	 */
-	public Connection(Stop to) {
+	public Connection(Stop to, int time) {
 		this.to = to;
+		this.time=time;
 	}
 
 	public Stop getTo() {
