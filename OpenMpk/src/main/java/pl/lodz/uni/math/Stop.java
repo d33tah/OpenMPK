@@ -53,10 +53,18 @@ public class Stop{
 		return true;
 	}
 
+	/**
+	 * 
+	 * @return Odleglosc od poczatku mierzona w czasie
+	 */
 	public int getLength() {
 		return length;
 	}
 
+	/**
+	 * 
+	 * @param length Odleglosc od poczatku mierzona w czasie
+	 */
 	public void setLength(int length) {
 		this.length = length;
 	}

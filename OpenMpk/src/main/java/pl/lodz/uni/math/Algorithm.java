@@ -8,29 +8,9 @@ public class Algorithm {
 	private static final int INF = 999999999;
 
 	public static void main(String[] args) {
-		Graph graf = new Graph();
-		Stop a = new Stop("A");
-		Stop b = new Stop("B");
-		Stop c = new Stop("C");
-		a.setId("A");
-		b.setId("B");
-		c.setId("C");
-		a.addConnection(new Connection(b, 2));
-		b.addConnection(new Connection(c, 3));
-		a.addConnection(new Connection(c, 7));
-
-		graf.addStop("A", a);
-		graf.addStop("B", b);
-		graf.addStop("C", c);
-		// final Map<String, Integer> odlegloscTab = new HashMap<String,
-		// Integer>();
-		// Map<String, String> poprzednikTab = new HashMap<String, String>();
-
-		dijkstra(graf, "A");
-
 	}
 
-	public static void dijkstra(Graph graf, String startingPoint) {
+	public void dijkstra(Graph graf, String startingPoint) {
 		Comparator<Stop> comm = new Comparator<Stop>() {
 
 			public int compare(Stop o1, Stop o2) {
