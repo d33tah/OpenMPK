@@ -8,9 +8,11 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		//GraphLoader loader = new GraphLoader();
-		//Graph graph = loader.loadGraph();
-		System.out.println("Program uruchomi³ siê poprawnie.");
-
+		GraphLoader loader = new GraphLoader();
+		Graph graph = loader.loadGraph();
+		System.out.println("Program uruchomil sie poprawnie.");
+		Algorithm algorithm=new Algorithm();
+		algorithm.dijkstra(graph, "Strykowska");
+		System.out.println(graph.getStop("SzczeciÅ„ska").getLength());
 	}
 }
