@@ -7,12 +7,31 @@ import java.util.List;
 public class Stop{
 	@Override
 	public String toString() {
-		return "Stop [name=" + name + ", id=" + id + ", previous=" + previous + ", length=" + length + "]";
+		return "Stop [name=" + name + ", id=" + id + ", previous=" + (null== previous ? "null" : previous.name) + ", length=" + length + "]";
 	}
+	
 
 	private String name;
+	/*@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("Stop [name=");
+		builder.append(name);
+		builder.append(", id=");
+		builder.append(id);
+		builder.append(", previous=");
+		builder.append(null== previous ? "null" : previous.name);
+		builder.append(", length=");
+		builder.append(length);
+		builder.append("]");
+		return builder.toString();
+	}*/
+
 	private String id;
 	private Stop previous;
+	private int length;
+	private List<Connection> connections;
+	
 	public Stop getPrevious() {
 		return previous;
 	}
@@ -69,9 +88,6 @@ public class Stop{
 		this.length = length;
 	}
 
-	private int length;
-	private List<Connection> connections;
-
 
 	public List<Connection> getConnections() {
 		return connections;
@@ -99,6 +115,9 @@ public class Stop{
 	}
 
 	public void addConnection(Connection connection) {
+//		System.out.println("dodaje polaczenie dla przystanku "+name+", laczacy z "+connection.getTo().name);
+//		System.out.println("connections "+connections);
+//		System.out.println("connections.containt "+connections.contains(connection));
 		if (!connections.contains(connection)) {
 			connections.add(connection);
 		}

@@ -22,8 +22,9 @@ public class GraphLoader {
 			while ((strLine = br.readLine()) != null) {
 				String[] commaSeparated = strLine.split(",");
 				Stop stop = new Stop( commaSeparated[1] );
-				stop.setId(commaSeparated[1]);
-				graph.addStop(commaSeparated[1],stop);
+				stop.setId(commaSeparated[0]);
+				stop.setName(commaSeparated[1]);
+				graph.addStop(commaSeparated[0],stop);
 			}
 			in.close();
 			
@@ -80,7 +81,7 @@ public class GraphLoader {
 			while ((strLine = br.readLine()) != null) {
 				for(int i=0; i<Integer.parseInt(strLine); i++)
 				{
-				parseDirection(lineName,i);
+					parseDirection(lineName,i);
 				}
 			}
 			in.close();

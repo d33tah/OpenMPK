@@ -47,14 +47,18 @@ public class Algorithm {
 //			stop.setLength(-1);
 			kolejkaPrzystankow.add(stop);
 		}
-		System.out.println(kolejkaPrzystankow);
+//		System.out.println(kolejkaPrzystankow);
 		Stop temp;
 		while (!kolejkaPrzystankow.isEmpty()) {
 			temp = kolejkaPrzystankow.poll();
-			System.out.println("zdjalem "+temp.getId());
+//			System.out.println("zdjalem "+temp.getId());
 			for (Connection connection : temp.getConnections()) {
-				System.out.println("odwiedzam "+connection.getTo().getId());
-				if (connection.getTo().getLength() > temp.getLength() + connection.getTime(null)) {
+//				System.out.println("odwiedzam "+connection.getTo().getId());
+				if(null == connection.getTo()){
+					System.out.println("getTo jest nullem, dla connecion "+connection+", dla przystanku "+temp);
+					System.out.println("\n\nconnections " + temp.getConnections());
+				}
+				if (null != connection.getTo() && connection.getTo().getLength() > temp.getLength() + connection.getTime(null)) {
 					connection.getTo().setLength(temp.getLength() + connection.getTime(null));
 					connection.getTo().setPrevious(temp);
 					kolejkaPrzystankow.add(connection.getTo());
@@ -63,8 +67,8 @@ public class Algorithm {
 
 		}
 
-		for (Stop stop : graf.getStopsMap().values()) {
+		/*for (Stop stop : graf.getStopsMap().values()) {
 			System.out.println("Odleg³oœæ: " + stop.getLength() + " Nazwa: " + stop.getId() + (stop.getPrevious() == null ? "" : " poprzednik: " + stop.getPrevious().getId()));
-		}
+		}*/
 	}
 }

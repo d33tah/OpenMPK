@@ -45,4 +45,18 @@ public class Connection {
 	public void setLine(Line line) {
 		this.line = line;
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("Connection [to=");
+		builder.append(to);
+		builder.append(", time=");
+		builder.append(time);
+		builder.append(", line=");
+		builder.append(line);
+		builder.append("]");
+		return builder.toString();
+	}
+	
 }
