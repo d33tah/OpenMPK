@@ -56,9 +56,9 @@ public class Algorithm {
 //				System.out.println("odwiedzam "+connection.getTo().getId());
 				if(null == connection.getTo()){
 					System.out.println("getTo jest nullem, dla connecion "+connection+", dla przystanku "+temp);
-					System.out.println("\n\nconnections " + temp.getConnections());
+					System.out.println("\n\nconnections " + temp.getConnections()+", "+temp.getName()+","+temp.getId());
 				}
-				if (null != connection.getTo() && connection.getTo().getLength() > temp.getLength() + connection.getTime(null)) {
+				if (connection.getTo().getLength() > temp.getLength() + connection.getTime(null)) {
 					connection.getTo().setLength(temp.getLength() + connection.getTime(null));
 					connection.getTo().setPrevious(temp);
 					kolejkaPrzystankow.add(connection.getTo());

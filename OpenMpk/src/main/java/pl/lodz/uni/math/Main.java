@@ -9,6 +9,7 @@ public class Main {
 
 	public static void main(String[] args) {
 
+		System.out.println(new File(".").getAbsolutePath()); 
 		GraphLoader loader = new GraphLoader();
 		Graph graph = loader.loadGraph();
 		System.out.println("Program uruchomil sie poprawnie.");

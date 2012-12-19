@@ -21,7 +21,14 @@ public class Graph {
 	}
 
 	public Stop getStop(String id) {
-		return stopsMap.get(id);
+		Stop ret = stopsMap.get(id);
+		if(ret==null)
+		{
+			System.out.println("Nie znaleziono dla: "+id);
+			return new Stop("(NIEZNANY)");
+		}
+			
+		return ret;
 	}
 
 	public Map<String, Stop> getStopsMap() {
