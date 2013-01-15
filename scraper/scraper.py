@@ -4,18 +4,18 @@
 """
 scraper.py
 
-Ten kod z zaï¿½oï¿½enia ma pobieraï¿½ dane z pobranych z mpk.lodz.pl paczek 
-z rozkï¿½adami, a takï¿½e samodzielnie pobieraï¿½ stamtï¿½d surowe dane i przetwarzaï¿½
-je. Po przetworzeniu na wyjï¿½ciu ma pojawiaï¿½ siï¿½ ï¿½atwiejsza do przetworzenia
+Ten kod z za³o¿enia ma pobieraæ dane z pobranych z mpk.lodz.pl paczek 
+z rozk³adami, a tak¿e samodzielnie pobieraæ stamt¹d surowe dane i przetwarzaæ
+je. Po przetworzeniu na wyjœciu ma pojawiaæ siê ³atwiejsza do przetworzenia
 struktura danych.
 
-Kod na dzieï¿½ dzisiejszy wyglï¿½da przeokropnie - uparï¿½em siï¿½ na Pythona 3, a ï¿½e
-nie byï¿½em w stanie znaleï¿½ï¿½ dla niego ï¿½adnej biblioteki dla scrapingu, uï¿½yï¿½em
-urllib+wï¿½asnych hackï¿½w. Drugim powodem jest sposï¿½b, w jaki zbudowana jest
-strona MPK - jest kilka ciekawych kwiatkï¿½w, opisane w komentarzach poniï¿½ej.
-Trzeci powï¿½d jest taki, ï¿½e na kaï¿½dym z krokï¿½w nie miaï¿½em pojï¿½cia, czego bï¿½dï¿½
-potrzebowaï¿½ za chwilï¿½ i tak powstaï¿½ hack na hacku. Kiedyï¿½ pewnie bï¿½dzie trzeba
-to przepisaï¿½.
+Kod na dzieñ dzisiejszy wygl¹da przeokropnie - upar³em siê na Pythona 3, a ¿e
+nie by³em w stanie znaleŸæ dla niego ¿adnej biblioteki dla scrapingu, u¿y³em
+urllib+w³asnych hacków. Drugim powodem jest sposób, w jaki zbudowana jest
+strona MPK - jest kilka ciekawych kwiatków, opisane w komentarzach poni¿ej.
+Trzeci powód jest taki, ¿e na ka¿dym z kroków nie mia³em pojêcia, czego bêdê
+potrzebowa³ za chwilê i tak powsta³ hack na hacku. Kiedyœ pewnie bêdzie trzeba
+to przepisaæ.
 """
 
 #na wypadek uruchomienia pod Pythonem 2.x - funkcja print() zamiast operatora
@@ -26,42 +26,42 @@ import os #do sprawdzania czy katalog istnieje
 
 if not sys.version.startswith('3'):
 	print("""
-	Ten program zostaï¿½ przeznaczony do uruchamiania pod interpreterem
-	Pythona w wersji 3.x W teorii wszystko powinno dziaï¿½aï¿½, ale na wszelki
-	wypadek przerywam dziaï¿½anie programu.
+	Ten program zosta³ przeznaczony do uruchamiania pod interpreterem
+	Pythona w wersji 3.x W teorii wszystko powinno dzia³aæ, ale na wszelki
+	wypadek przerywam dzia³anie programu.
 	""")
-	sys.exit(1) #zakomentuj tï¿½ linijkï¿½, jeï¿½li czujesz siï¿½ odwaï¿½ny :P
-	print("Program kontynuuje pracï¿½...")
+	sys.exit(1) #zakomentuj t¹ linijkê, jeœli czujesz siê odwa¿ny :P
+	print("Program kontynuuje pracê...")
 
 from Linia import Linia
 from downloader import pobierz_paczki
 
 if __name__=='__main__':
 	"""
-	Kod testujï¿½cy.
+	Kod testuj¹cy.
 
-	W wersji caï¿½kowicie odkomentowanej, pobiera paczki MPK, po czym 
-	porï¿½wnuje linie i przystanki ze strony z tymi z paczki. Na dzieï¿½ 
-	dzisiejszy ï¿½rednio przydatne, bo przystanki nie majï¿½ dziaï¿½ajï¿½cego 
-	__eq__ (TODO) (generalnie przeprojektowaï¿½ struktury danych tutaj)
+	W wersji ca³kowicie odkomentowanej, pobiera paczki MPK, po czym 
+	porównuje linie i przystanki ze strony z tymi z paczki. Na dzieñ 
+	dzisiejszy œrednio przydatne, bo przystanki nie maj¹ dzia³aj¹cego 
+	__eq__ (TODO) (generalnie przeprojektowaæ struktury danych tutaj)
 	"""
 	#pobierz_paczki()
 	z_paczki = Linia.listuj_linie('file://%s/' % 
 		os.path.realpath('rozpakowane'))
-	#ze_strony = Linia.listuj_linie('http://www.mpk.lodz.pl/rozklady/')
-	#assert(z_paczki==ze_strony)
+	ze_strony = Linia.listuj_linie('http://www.mpk.lodz.pl/rozklady/')
+	assert(z_paczki==ze_strony)
 	przetworzonych = 0
 	z_bledami = 0
-	#for i in range(len(ze_strony)):
-	for i in range(len(z_paczki)):
+	for i in range(len(ze_strony)):
+	#for i in range(len(z_paczki)):
 		przetworzonych += 1
-		#print("Porownuje %s..." % ( z_paczki[i].nazwa))
+		print("Porownuje %s..." % ( z_paczki[i].nazwa))
 		przystanki_z_paczki = z_paczki[i].pobierz_przystanki()
-		#przystanki_ze_strony = ze_strony[i].pobierz_przystanki()
-		#if(przystanki_z_paczki!=przystanki_ze_strony):
-		#	print("Rï¿½nica!")
-		#	z_bledami += 1
+		przystanki_ze_strony = ze_strony[i].pobierz_przystanki()
+		if(przystanki_z_paczki!=przystanki_ze_strony):
+			print("Ró¿nica!")
+			z_bledami += 1
 		#assert(przystanki_z_paczki==przystanki_ze_strony)
-	print("Przetworzonych linii: %d, z bï¿½ï¿½dami: %d" % (
+	print("Przetworzonych linii: %d, z b³êdami: %d" % (
 		przetworzonych, z_bledami))
 
