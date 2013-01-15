@@ -48,19 +48,19 @@ if __name__=='__main__':
 	#pobierz_paczki()
 	z_paczki = Linia.listuj_linie('file://%s/' % 
 		os.path.realpath('rozpakowane'))
-	ze_strony = Linia.listuj_linie('http://www.mpk.lodz.pl/rozklady/')
-	assert(z_paczki==ze_strony)
+	#ze_strony = Linia.listuj_linie('http://www.mpk.lodz.pl/rozklady/')
+	#assert(z_paczki==ze_strony)
 	przetworzonych = 0
 	z_bledami = 0
-	for i in range(len(ze_strony)):
-	#for i in range(len(z_paczki)):
+	#for i in range(len(ze_strony)):
+	for i in range(len(z_paczki)):
 		przetworzonych += 1
 		print("Porownuje %s..." % ( z_paczki[i].nazwa))
 		przystanki_z_paczki = z_paczki[i].pobierz_przystanki()
-		przystanki_ze_strony = ze_strony[i].pobierz_przystanki()
-		if(przystanki_z_paczki!=przystanki_ze_strony):
-			print("Ró¿nica!")
-			z_bledami += 1
+		#przystanki_ze_strony = ze_strony[i].pobierz_przystanki()
+		#if(przystanki_z_paczki!=przystanki_ze_strony):
+		#	print("Ró¿nica!")
+		#	z_bledami += 1
 		#assert(przystanki_z_paczki==przystanki_ze_strony)
 	print("Przetworzonych linii: %d, z b³êdami: %d" % (
 		przetworzonych, z_bledami))
