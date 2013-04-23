@@ -54,9 +54,9 @@ class Rozklad:
 				#TODO: poprawne przetwarzanie liter na koñcu.
 				#Gdybym wiedzia³, jak ten kod siê rozroœnie,
 				#rozwi¹za³bym to inaczej...
-				for litera in ('x','y','A','B','C','N','D',
+				for litera in ('x','A','B','C','N','D',
 						'd','a','s','T','R','z','P',
-						'f','n','J'):
+						'f','n','J','y'):
 					#Obetnij literkê na koñcu.
 					minuta = minuta.rstrip(litera)
 				if minuta=='-':
